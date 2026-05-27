@@ -25,4 +25,4 @@ git clone https://github.com/gwu-libraries/ac_attendance.git
 ```
 
 In RStudio, run `app.R` as a Shiny App using the Run App <img width="65" height="18" alt="clipboard-70856000" src="https://github.com/user-attachments/assets/b389b452-4b97-45c2-8267-96b23a809c2e" />
- button. Select the relevant files, the correct sheet within the faculty feedback Excel file, and the start date. Press "Generate Notifications" and download the result file.
+ button. Select the relevant files, the correct sheet within the faculty feedback Excel file, and the start date. Press "Process" and download the Zip file.
