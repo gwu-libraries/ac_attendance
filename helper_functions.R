@@ -87,26 +87,32 @@ create_zip <- function(attendance_stats, zip_filename) {
   dir.create(tmp_path)
   
   # The file INSIDE the ZIP (relative)
-  xlsx_basename <- sub("\\.zip$", ".xlsx", basename(zip_filename))
+  # xlsx_basename <- sub("\\.zip$", ".xlsx", basename(zip_filename))
+  xlsx_basename <- paste0("attendance_", format(Sys.Date(), "%Y%m%d"), ".xlsx")
   
   # The file ON DISK (absolute)
   xlsx_fullpath <- file.path(tmp_path, xlsx_basename)
   
   # Write the Excel file
-  write.xlsx(attendance_stats, xlsx_fullpath, row.names = FALSE)
+  write.xlsx(attendance_stats, xlsx_fullpath, rowNames = FALSE)
+  
+  # TODO:  CREATE THE INDIVIDUAL COURSE REPORTS
+  file_paths <- xlsx_basename
+  
+  for (course_i in unique(attendance_stats$course)) {
+    course_df <- attendance_stats %>% filter(course == course_i)
+    xlsx_i_basename <- xlsx_basename <- paste0("attendance_", course_i, "_", format(Sys.Date(), "%Y%m%d"), ".xlsx")
+    xlsx_i_fullpath <- file.path(tmp_path, xlsx_i_basename)
+
+    write.xlsx(course_df, xlsx_i_fullpath, rowNames = FALSE)
+    
+    file_paths <- c(file_paths, xlsx_i_basename)
+  }
   
   # ZIP using the relative name, with tmp_path as the root
   zip::zip(
     zipfile = zip_filename,
-    files = xlsx_basename,   # relative path
+    files = file_paths,   # relative path
     root = tmp_path          # base directory
   )
-  
-  # TODO:  CREATE THE INDIVIDUAL COURSE REPORTS
-  
-  # for (course_i in unique(attendance_stats$course)) {
-  #   course_df <- attendance_stats %>% filter(course == course_i)
-  #   course_filename = paste0("attendance_", course_i, "_", format(Sys.Date(), "%Y%m%d"), ".xlsx")
-  #   write.xlsx(course_df, course_filename, row.names = FALSE)
-  # }
 }
