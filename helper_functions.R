@@ -100,7 +100,10 @@ create_zip <- function(attendance_stats, zip_filename) {
   file_paths <- xlsx_basename
   
   for (course_i in unique(attendance_stats$course)) {
-    course_df <- attendance_stats %>% filter(course == course_i)
+    course_df <- attendance_stats %>%
+      filter(course == course_i) %>%
+      group_by(student_lastname, student_firstname, student_id, course, section_number, session_label) %>%
+      summarize(attendance_points = sum(weekly_attendance_points))
     xlsx_i_basename <- xlsx_basename <- paste0("attendance_", course_i, "_", format(Sys.Date(), "%Y%m%d"), ".xlsx")
     xlsx_i_fullpath <- file.path(tmp_path, xlsx_i_basename)
 
