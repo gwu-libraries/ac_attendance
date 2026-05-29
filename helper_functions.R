@@ -64,17 +64,21 @@ process_attendance <- function(roster_path, attendance_path, selected_session, m
                                   ' - ',
                                   format(end_date, '%B %d, %Y'),
                                   ')'))
-  
-  session_weeks <- sessions %>%
-    mutate(week_num = map2(start_week, end_week, seq)) %>%
-    unnest(week_num)  
+  # 
+  # session_weeks <- sessions %>%
+  #   mutate(week_num = map2(start_week, end_week, seq)) %>%
+  #   unnest(week_num)  
   
   attendance_stats <- attendance_stats %>%
-    left_join(sessions %>% select(year, start_week, end_week, session_label),
+    left_join(sessions %>% select(year, start_date, start_week, end_week, session_label),
               join_by(week_num >= start_week, week_num <= end_week)) %>%
     filter(session_label == selected_session) %>%
-    mutate(session_week = week_num - start_week + 1) %>%
-    select(student_lastname, student_firstname, student_id, course, section_number, session_label, session_week, n_sessions) %>%
+    mutate(session_week = week_num - start_week + 1,
+           week_start = start_date + weeks(week_num - 1),
+           week_end = start_date + weeks(week_num - 1) + 6,
+           week_of = paste0(format(week_start, format = "%m/%d/%Y"), " - ", format(week_start, format = "%m/%d/%Y"))) %>%
+    select(student_lastname, student_firstname, student_id,
+           course, section_number, session_label, session_week, week_of, n_sessions) %>%
     # using pmin in the next line, otherwise, the next line will always result in 1 since it's min of n_sessions over all rows
     mutate(weekly_attendance_points = pmin(n_sessions, as.numeric(max_weekly_points)))
   
