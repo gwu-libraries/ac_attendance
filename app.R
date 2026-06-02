@@ -18,25 +18,11 @@ sessions <- sessions_raw |>
                            format(start_date, "%B %d, %Y"),
                            " - ",
                            format(end_date, "%B %d, %Y"),
-                           ")")
+                           ")"),
+    session_code = paste0(year, ", ", session)
   )
-session_choices <- setNames(sessions$session_label, sessions$session_label)
-
-
-# ---------------------------------------------------------------------------
-# Stub: replace this function with real processing logic
-# ---------------------------------------------------------------------------
-# process_attendance <- function(roster_path, attendance_path, session_label) {
-#   # TODO: implement real logic using helper_functions.R
-#   # For now, return a placeholder data frame
-#   data.frame(
-#     message        = "Processing stub — replace with real logic",
-#     roster_file    = basename(roster_path),
-#     attendance_file = basename(attendance_path),
-#     session        = session_label
-#   )
-# }
-# ---------------------------------------------------------------------------
+# make a vector of labeled values
+session_choices <- setNames(sessions$session_code, sessions$session_label)
 
 source('helper_functions.R')
 

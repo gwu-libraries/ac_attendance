@@ -8,13 +8,18 @@ library(openxlsx)
 library(zip)
 
 process_attendance <- function(roster_path, attendance_path, selected_session, max_weekly_points) {
-  #roster1_raw <- read_excel('data/SAMPLE ROSTER.xlsx')
-  #roster2_raw <- read_excel('data/Sample Roster SP26 (BISC; CHEM; ECON; PHYS).xlsx')
-  roster2_raw <- read_excel(roster_path)
-  #attendance_raw <- read.csv('data/event_attendee_logs (9).csv')
+  roster_raw <- read_excel(roster_path)
   attendance_raw <- read.csv(attendance_path)
-  sessions_raw <- read.csv('data/sessions.csv')
-  # session <- 'Spring 2026 (January 12, 2026 - May 08, 2026)'
+  sessions_raw <- read.csv('data/sessions.csv')  # session <- 'Spring 2026 (January 12, 2026 - May 08, 2026)'
+  
+  # Parse selected_session to get year and term.
+  selected_session_year <- as.numeric(str_sub(selected_session, 1, 4))
+  selected_session_term <- str_sub(selected_session, 7)
+  selected_session_term_code <- case_when(
+    selected_session_term == 'Spring' ~ '01',
+    startsWith(selected_session_term, 'Summer') ~ '02',
+    selected_session_term == 'Fall' ~ '03'
+  )
   
   attendance <- attendance_raw %>%
     select(Student.Email, Student.Name,
@@ -39,20 +44,27 @@ process_attendance <- function(roster_path, attendance_path, selected_session, m
     summarize(n_sessions = n()) %>%
     ungroup()
   
-  roster2 <- roster2_raw %>%
+  roster <- roster_raw %>%
     filter(!is.na(`GW E-Mail Address`)) %>%
     select(student_email = `GW E-Mail Address`,
            student_firstname = `First Name`,
            student_lastname = `Last Name`,
            subject = `Subject Code`,
            course_number = `Course Number`,
-           section_number = `Section Number`) %>%
+           section_number = `Section Number`,
+           session_term_code = `Course Term Code`) %>%
     mutate(student_id = tolower(str_replace(student_email, '@.*', '')),
-           course = paste0(subject, course_number)) %>%
+           course = paste0(subject, course_number),
+           session_year = as.numeric(str_sub(session_term_code, 1, 4)),
+           session_term = substr(session_term_code, 5, 6)) %>%
     select(-subject, -course_number, -student_email) %>%
-    filter(section_number %in% as.character(10:19))
-  
-  attendance_stats <- left_join(roster2, attendance_stats)
+    # only retain sections 10-19
+    filter(section_number %in% as.character(10:19)) %>%
+    # limit to session/term selected
+    filter(session_year == selected_session_year) %>%
+    filter(session_term == selected_session_term_code)
+    
+  attendance_stats <- left_join(roster, attendance_stats)
   
   sessions <- sessions_raw %>%
     mutate(start_date = ymd(start_date),
@@ -63,7 +75,12 @@ process_attendance <- function(roster_path, attendance_path, selected_session, m
                                   format(start_date, '%B %d, %Y'),
                                   ' - ',
                                   format(end_date, '%B %d, %Y'),
-                                  ')'))
+                                  ')'),
+           session_term_code = case_when(
+             selected_session_term == 'Spring' ~ '01',
+             startsWith(selected_session_term, 'Summer') ~ '02',
+             selected_session_term == 'Fall' ~ '03'
+           ))
   # 
   # session_weeks <- sessions %>%
   #   mutate(week_num = map2(start_week, end_week, seq)) %>%
@@ -71,8 +88,11 @@ process_attendance <- function(roster_path, attendance_path, selected_session, m
   
   attendance_stats <- attendance_stats %>%
     left_join(sessions %>% select(year, start_date, start_week, end_week, session_label),
-              join_by(week_num >= start_week, week_num <= end_week)) %>%
-    filter(session_label == selected_session) %>%
+              join_by(session_year == year,
+                      week_num >= start_week,
+                      week_num <= end_week)) %>%
+    filter(session_year == selected_session_year) %>%
+    filter(session_term == selected_session_term_code) %>%
     mutate(session_week = week_num - start_week + 1,
            week_start = start_date + weeks(week_num - 1),
            week_end = start_date + weeks(week_num - 1) + 6,
