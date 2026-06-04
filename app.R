@@ -24,9 +24,12 @@ sessions <- sessions_raw |>
 # make a vector of labeled values
 session_choices <- setNames(sessions$session_code, sessions$session_label)
 
+# Choose the last session that has already started
+# So, if we are between sessions, this will select the previous session
 current_session <- sessions %>%
-  filter(start_date <= today("America/New_York") &
-           end_date >= today("America/New_York")) %>%
+  filter(start_date <= today("America/New_York")) %>%
+  arrange(start_date) %>%
+  tail(1) %>%
   pull(session_code)
 
 source('helper_functions.R')
