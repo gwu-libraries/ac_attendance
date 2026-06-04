@@ -96,7 +96,11 @@ process_attendance <- function(roster_path, attendance_path, selected_session, m
     mutate(session_week = week_num - start_week + 1,
            week_start = start_date + weeks(week_num - 1),
            week_end = start_date + weeks(week_num - 1) + 6,
-           week_of = paste0(format(week_start, format = "%m/%d/%Y"), " - ", format(week_start, format = "%m/%d/%Y"))) %>%
+           week_of = if_else(is.na(session_week),
+                             NA,
+                             paste0(format(week_start, format = "%m/%d/%Y"),
+                                    " - ",
+                                    format(week_end, format = "%m/%d/%Y")))) %>%
     select(student_lastname, student_firstname, student_id,
            course, section_number, session_label, session_week, week_of, n_sessions) %>%
     # using pmin in the next line, otherwise, the next line will always result in 1 since it's min of n_sessions over all rows
@@ -127,7 +131,8 @@ create_zip <- function(attendance_stats, zip_filename) {
     course_df <- attendance_stats %>%
       filter(course == course_i) %>%
       group_by(student_lastname, student_firstname, student_id, course, section_number, session_label) %>%
-      summarize(attendance_points = sum(weekly_attendance_points))
+      summarize(attendance_points = sum(weekly_attendance_points)) %>%
+      arrange(section_number, student_lastname, student_firstname)
     xlsx_i_basename <- xlsx_basename <- paste0("attendance_", course_i, "_", format(Sys.Date(), "%Y%m%d"), ".xlsx")
     xlsx_i_fullpath <- file.path(tmp_path, xlsx_i_basename)
 

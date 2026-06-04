@@ -24,20 +24,65 @@ sessions <- sessions_raw |>
 # make a vector of labeled values
 session_choices <- setNames(sessions$session_code, sessions$session_label)
 
+current_session <- sessions %>%
+  filter(start_date <= today("America/New_York") &
+           end_date >= today("America/New_York")) %>%
+  pull(session_code)
+
 source('helper_functions.R')
 
 ui <- page_sidebar(
-  title = "AC Attendance Processor",
+  title = "GW Academic Commons Review Session Attendance Processor",
   theme = bs_theme(version = 5, preset = "shiny"),
   
-  tags$style(HTML("
-    .bslib-page-sidebar .main {
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-  ")),
+  # tags$style(HTML("
+  #   .bslib-page-sidebar .main {
+  #     max-width: 800px;
+  #     margin-left: auto;
+  #     margin-right: auto;
+  #   }
+  # ")),
 
+  tags$style(HTML("
+  /* keep main content narrow */
+
+  .bslib-page-sidebar .main {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* shrink everything */
+  body, .bslib-page-sidebar, .card, .form-control, .btn, label, input, select {
+    font-size: 0.85rem !important;
+  }
+
+  .btn {
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .form-control, .form-select {
+    padding: 0.25rem 0.4rem !important;
+    height: auto !important;
+  }
+
+  .narrow-card {
+    max-width: 450px;
+  }
+  
+  .card-header {
+    padding: 0.4rem 0.75rem !important;
+  }
+
+  .card-body {
+    padding: 0.75rem !important;
+  }
+
+  .sidebar {
+    font-size: 0.85rem !important;
+  }
+")),
+             
   sidebar = sidebar(
     width = 320,
 
@@ -59,7 +104,7 @@ ui <- page_sidebar(
       "session",
       "Session",
       choices  = session_choices,
-      selected = NULL
+      selected = current_session
     ),
     
     selectInput(
@@ -77,11 +122,13 @@ ui <- page_sidebar(
   ),
 
   card(
+    class = "narrow-card",
     card_header("Status"),
     uiOutput("status_ui")
   ),
   
   card(
+    class = "narrow-card",
     card_header("Download"),
     uiOutput("download_ui")
   )
