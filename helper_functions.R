@@ -106,6 +106,17 @@ process_attendance <- function(roster_path, attendance_path, selected_session, m
     # using pmin in the next line, otherwise, the next line will always result in 1 since it's min of n_sessions over all rows
     mutate(weekly_attendance_points = pmin(n_sessions, as.numeric(max_weekly_points)))
   
+  selected_session_label <- sessions %>%
+    filter(year == selected_session_year,
+           session == selected_session_term) %>%
+    pull(session_label)
+  
+  # Fill in for students who didn't attend anything
+  attendance_stats <- attendance_stats %>%
+    mutate(session_label = replace_na(session_label,
+                                      selected_session_label),
+           weekly_attendance_points = replace_na(weekly_attendance_points, 0))
+    
   return(attendance_stats)
 }
 
