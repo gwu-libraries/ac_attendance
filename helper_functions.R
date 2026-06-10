@@ -26,7 +26,7 @@ process_attendance <- function(roster_path, attendance_path, selected_session, m
            session_date = Start.At.Date,
            course = Courses,
            attended = Student.Attendance) %>%
-    mutate(session_date = ymd(session_date),
+    mutate(session_date = parse_date_time(session_date, orders = c('ymd', 'mdy')), # because Penji keeps changing the format
            student_id = tolower(str_replace(Student.Email, '@.*', '')),
            course = str_sub(course, 1, 8),
            week_num = epiweek(session_date - days(1)),
@@ -115,6 +115,7 @@ process_attendance <- function(roster_path, attendance_path, selected_session, m
   attendance_stats <- attendance_stats %>%
     mutate(session_label = replace_na(session_label,
                                       selected_session_label),
+           n_sessions = replace_na(n_sessions, 0),
            weekly_attendance_points = replace_na(weekly_attendance_points, 0))
     
   return(attendance_stats)
