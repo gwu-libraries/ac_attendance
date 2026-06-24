@@ -205,7 +205,7 @@ server <- function(input, output, session) {
 
   output$download_excel <- downloadHandler(
     filename = function() {
-      paste0("attendance_", format(Sys.Date(), "%Y%m%d"), ".zip")
+      paste0("attendance_", format(Sys.Date(), "%Y%m%d"), "_", format(Sys.time(), "%H%M"), ".zip")
     },
     content = function(file) {
       # TODO: result() should return a list of files.

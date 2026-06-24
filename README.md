@@ -12,7 +12,7 @@ This app takes as inputs:
 The app returns a zip file containing multiple Excel documents:  
 
 - An Excel workboook containing the students in the roster, which weeks they attended review sessions for their courses, and how many sessions they attended each week.
-- Filtered versions of the above, one for each course.
+- Filtered versions of the above, one for each course.  Each of these also contains: Total number of sessions each student attended, and total attendance points credited.
 
 Weeks are Monday through Sunday.
 
